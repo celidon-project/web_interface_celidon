@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  celidon_ui_prod:
+    build:
+      context: .
+      target: prod
+    network_mode: host
+  position_server:
+    build: position_server
+    network_mode: host
+  position_client:
+    build: position_client
+    depends_on:
+      - position_server
+    network_mode: host

@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  nginx:
+    build: nginx
+    network_mode: host
+  mqtt:
+    image: toke/mosquitto
+    network_mode: host
+  celidon_ui_dev:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - ./celidon_ui:/app
+    network_mode: host
+  position_server:
+    build: position_server
+    depends_on:
+      - nginx
+    environment:
+      - "PYTHONUNBUFFERED=1"
+    network_mode: host
+  position_client:
+    build: position_client
+    depends_on:
+      - position_server
+    environment:
+      - "PYTHONUNBUFFERED=1"
+    network_mode: host
