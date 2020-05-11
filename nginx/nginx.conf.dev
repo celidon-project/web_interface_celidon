@@ -1,0 +1,45 @@
+# global settings
+user root root;
+pid /var/run/nginx.pid;
+
+events {
+  use                 epoll;
+  worker_connections  128;
+}
+
+# HTTP defaults
+http {
+  include      mime.types;
+  charset      UTF-8;
+
+  # Proxy configuration
+  # Operator server
+  server {
+    listen 80;
+    server_name "";
+
+    # Position server websocket
+    # No trailing slash because it's only this single route
+    location /position_server {
+      proxy_pass http://localhost:1989/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host:$server_port;
+      proxy_buffering off;
+    }
+
+    # UI general (+ vue websocket)
+    location / {
+      proxy_pass http://localhost:8080/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host:$server_port;
+      proxy_buffering off;
+    }
+  }
+
+}
