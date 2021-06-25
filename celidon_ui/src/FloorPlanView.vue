@@ -19,6 +19,7 @@
       mapSource: String,
       ilocPositions: Object,
       poiPositions: Object,
+      hololensPositions: Object,
       viewBounds: Array
     },
     data() {
@@ -26,24 +27,49 @@
         ffMarkers: {},
         poiMarkers: {},
         poiTimeouts: {},
-        floorMap: Object
+        hololensMarkers: {},
+        hololensTimeouts: {},
+        floorMap: Object,
       }
     },
     computed: {
-      firemen() {
-        if(this.ilocPositions)
-          return this.ilocPositions["floor"+this.floorId]
-      },
-      poi() {
-        if(this.poiPositions) {
-          return this.poiPositions["floor"+this.floorId]
-        }
-      },
       getBounds() {
         if(this.viewBounds)
           return [this.viewBounds, {padding: [1, 1]}]
         else
           return [[[0, 0], [12, 19.5]], {padding: [10, 10]}]
+      }
+    },
+    methods: {
+      updateIloc() {
+        if(this.ilocPositions) {
+          var firemen = this.ilocPositions["floor"+this.floorId]
+          if(firemen !== undefined) {
+              this.ffMarkers = mapUtil.updateFiremanMarkers(this.ffMarkers, this.floorMap, firemen);
+          }
+        }
+      },
+      updatePoi() {
+        if(this.poiPositions) {
+          var poi = this.poiPositions["floor"+this.floorId]
+          if(poi !== undefined) {
+            this.poiTimeouts = mapUtil.updateTimeouts(this.poiTimeouts, poi)
+            this.poiMarkers = mapUtil.updatePoiMarkers(this.poiMarkers, this.floorMap, this.poiTimeouts, poi);
+          }
+        }
+      },
+      updateHololens() {
+        if(this.hololensPositions) {
+          var hololens = this.hololensPositions["floor"+this.floorId]
+          if(hololens !== undefined) {
+            this.hololensTimeouts = mapUtil.updateTimeouts(this.hololensTimeouts, hololens)
+            this.hololensMarkers = mapUtil.updateHololensMarkers(this.hololensMarkers, this.floorMap, this.hololensTimeouts, hololens);
+          }
+        }
+      },
+      updateMapSize() {
+        this.floorMap.fitBounds(...this.getBounds);
+        this.floorMap.invalidateSize();
       },
     },
     mounted() {
@@ -62,17 +88,11 @@
 
       var imageBounds = [[0, 0], [12, 19.5]];
       L.imageOverlay(this.mapSource, imageBounds).addTo(this.floorMap);
-      this.floorMap.fitBounds(...this.getBounds);
-      this.floorMap.invalidateSize();
-    },
-    watch: {
-      firemen(x, _) {
-        this.ffMarkers = mapUtil.updateFiremanMarkers(this.ffMarkers, this.floorMap, x);
-      },
-      poi(x, _) {
-        this.poiTimeouts = mapUtil.updateTimeouts(this.poiTimeouts, x)
-        this.poiMarkers = mapUtil.updatePoiMarkers(this.poiMarkers, this.floorMap, this.poiTimeouts, x);
-      }
+      this.updateMapSize();
+
+      window.setInterval(this.updateIloc, 100);
+      window.setInterval(this.updatePoi, 100);
+      window.setInterval(this.updateHololens, 100);
     }
   }
 

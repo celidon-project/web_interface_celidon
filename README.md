@@ -26,7 +26,8 @@ Unless otherwise specified all transmitted values are integers.
 {"<tag-id>":
   {
     "ts": <unix timestamp in ms>,
-    "pos": [<x in mm>, <y in mm>, <z in mm>]
+    "pos": [<x in mm>, <y in mm>, <z in mm>],
+    "alias": <alias as string>
   }
 }
 ```
@@ -38,7 +39,8 @@ Unless otherwise specified all transmitted values are integers.
     "ts": <unix timestamp in ms>,
     "to": <timeout in ms>,
     "pos": [<x in mm>, <y in mm>, <z in mm>],
-    "text": <poi message as string>
+    "text": <poi message as string>,
+    "alias": <alias as string>
   }
 }
 ```

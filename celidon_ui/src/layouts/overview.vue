@@ -2,18 +2,18 @@
   <div class="overview">
     <div class="floor-maps">
       <div class="map">
-          <FloorPlanView floorId="0" mapSource="/brandhaus_eg.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :viewBounds="viewBounds" ref="0"/>
+          <FloorPlanView floorId="0" mapSource="/brandhaus_eg.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions" :viewBounds="viewBounds" ref="0"/>
       </div>
       <div class="map">
-          <FloorPlanView floorId="1" mapSource="/brandhaus_og.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :viewBounds="viewBounds" ref="1"/>
+          <FloorPlanView floorId="1" mapSource="/brandhaus_og.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions" :viewBounds="viewBounds" ref="1"/>
       </div>
     </div>
     <div class="floor-maps">
       <div class="map">
-          <FloorPlanView floorId="2" mapSource="/brandhaus_og.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :viewBounds="viewBounds" ref="2"/>
+          <FloorPlanView floorId="2" mapSource="/brandhaus_og.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions" :viewBounds="viewBounds" ref="2"/>
       </div>
       <div class="map">
-          <FloorPlanView floorId="-1" mapSource="/brandhaus_kg.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :viewBounds="viewBounds" ref="-1"/>
+          <FloorPlanView floorId="-1" mapSource="/brandhaus_kg.svg" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions" :viewBounds="viewBounds" ref="-1"/>
       </div>
     </div>
   </div>
@@ -28,7 +28,8 @@ export default {
   },
   props: {
     ilocPositions: Object,
-    poiPositions: Object
+    poiPositions: Object,
+    hololensPositions: Object
   },
   data() {
     return {

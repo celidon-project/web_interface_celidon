@@ -9,8 +9,10 @@ services:
   position_server:
     build: position_server
     network_mode: host
-  position_client:
-    build: position_client
-    depends_on:
-      - position_server
-    network_mode: host
+    environment:
+      - "PYTHONUNBUFFERED=1"
+  # position_client:
+  #   build: position_client
+  #   depends_on:
+  #     - position_server
+  #   network_mode: host

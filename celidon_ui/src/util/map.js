@@ -25,17 +25,20 @@ function updateFiremanMarkers(markers, map, objects) {
   // Update markers and add new markers
   Object.keys(objects).forEach(name => {
     var pos = objects[name].pos
+    var ofst = objects[name].ofst
     var marker = markers[name]
     if(marker) {
-      marker.setLatLng([pos[1], pos[0]])
+      marker.setLatLng([pos[1] + ofst[1], pos[0] + ofst[0]])
     } else {
-      markers[name] = firemanMarker([pos[1], pos[0]], name)
+      markers[name] = firemanMarker([pos[1] + ofst[1], pos[0] + ofst[0]], name)
       markers[name].addTo(map)
     }
   })
   // Delete old markers
   Object.entries(markers).forEach(([name, marker]) => {
-    if(!objects[name]) {
+    const d = new Date();
+    var now = d.getTime();
+    if((now - objects[name].ts)/1000 > 5) {
       marker.remove()
       delete markers[name]
     }
@@ -61,6 +64,7 @@ function poiMarker(latlng, name) {
       });
 }
 
+
 // markers: {name: LeafletMarker}
 // map: LeafletMap
 // objects: {name: {ts: timestamp, to: timeout, pos: lnglat, text: text}}
@@ -69,10 +73,11 @@ function updatePoiMarkers(markers, map, timeouts, objects) {
   Object.keys(objects).forEach(name => {
     var pos = objects[name].pos
     var marker = markers[name]
+    var ofst = objects[name].ofst
     if(marker) {
-      marker.setLatLng([pos[1], pos[0]])
+      marker.setLatLng([pos[1] + ofst[1], pos[0] + ofst[0]])
     } else {
-      markers[name] = poiMarker([pos[1], pos[0]], objects[name].text)
+      markers[name] = poiMarker([pos[1] + ofst[1], pos[0] + ofst[0]], objects[name].text)
       markers[name].addTo(map)
     }
   })
@@ -88,6 +93,54 @@ function updatePoiMarkers(markers, map, timeouts, objects) {
   return markers
 }
 
+
+function hololensMarker(latlng, name) {
+  return L.marker(
+    latlng,
+    {icon: L.icon({
+      iconUrl: 'hololens.svg',
+      iconSize: [30, 30],
+      iconAnchor: [15, 10],
+      shadowUrl: null
+    }),
+     title: name})
+     .bindTooltip(name,
+      {
+        permanent: true,
+        direction: 'top',
+        opacity: 1
+      });
+}
+
+// markers: {name: LeafletMarker}
+// map: LeafletMap
+// objects: {name: {ts: timestamp, to: timeout, pos: lnglat, text: text}}
+function updateHololensMarkers(markers, map, timeouts, objects) {
+  // Update markers and add new markers
+  Object.keys(objects).forEach(name => {
+    var pos = objects[name].pos
+    var marker = markers[name]
+    var ofst = objects[name].ofst
+    if(marker) {
+      marker.setLatLng([pos[1] + ofst[1], pos[0] + ofst[0]])
+    } else {
+      markers[name] = hololensMarker([pos[1] + ofst[1], pos[0] + ofst[0]], objects[name].text)
+      markers[name].addTo(map)
+    }
+  })
+  // Delete old markers
+  Object.entries(markers).forEach(([name, marker]) => {
+    const d = new Date();
+    var now = d.getTime();
+    if(now - timeouts[name].ts > timeouts[name].to) {
+      marker.remove()
+      delete markers[name]
+    }
+  })
+  return markers
+}
+
+
 // objects: {name: {ts: timestamp, to: timeout, pos: lnglat, text: text}}
 function updateTimeouts(timeouts, objects) {
   // Update markers and add new markers
@@ -98,4 +151,4 @@ function updateTimeouts(timeouts, objects) {
   return timeouts
 }
 
-export default {updateFiremanMarkers, updatePoiMarkers, updateTimeouts}
+export default {updateFiremanMarkers, updatePoiMarkers, updateHololensMarkers, updateTimeouts}

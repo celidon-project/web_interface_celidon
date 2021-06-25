@@ -1,7 +1,7 @@
 <template>
   <div class="singleview">
     <div class="floor-maps">
-        <FloorPlanView :floorId="floorId" :mapSource="mapSource" :ilocPositions="ilocPositions" :poiPositions="poiPositions" ref="floorRef"/>
+        <FloorPlanView :floorId="floorId" :mapSource="mapSource" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions" ref="floorRef"/>
     </div>
   </div>
 </template>
@@ -17,7 +17,8 @@ export default {
     floorId: String,
     mapSource: String,
     ilocPositions: Object,
-    poiPositions: Object
+    poiPositions: Object,
+    hololensPositions: Object
   },
   mounted() {
     const floor = this.$refs.floorRef;

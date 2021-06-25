@@ -25,8 +25,8 @@
     </nav>
     <div class="site-content">
       <div class="map-content">
-        <overview v-if="menu[view].key=='overview'" :ilocPositions="ilocPositions" :poiPositions="poiPositions"/>
-        <singleview v-for="item in activeSingleView" v-bind:key="item.key" v-bind:floorId="item.key" v-bind:mapSource="item.mapSource" :ilocPositions="ilocPositions" :poiPositions="poiPositions"/>
+        <overview v-if="menu[view].key=='overview'" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions"/>
+        <singleview v-for="item in activeSingleView" v-bind:key="item.key" v-bind:floorId="item.key" v-bind:mapSource="item.mapSource" :ilocPositions="ilocPositions" :poiPositions="poiPositions" :hololensPositions="hololensPositions"/>
       </div>
       <div class="information-content">
         <div class='informations'>
@@ -34,13 +34,13 @@
             <table>
               <tbody>
                 <tr>
-                  <th>ID</th>
-                  <th>x</th>
-                  <th>y</th>
-                  <th>z</th>
-                  <th>t</th>
+                  <th class="long">ID</th>
+                  <th class="fix">x</th>
+                  <th class="fix">y</th>
+                  <th class="fix">z</th>
+                  <th class="fix">t</th>
                 </tr>
-                  <tr v-for="([x, y, z, t], name) in internalData['active']" v-bind:key="name">
+                  <tr v-for="([x, y, z, t], name) in active" v-bind:key="name">
                     <td>{{ name }}</td>
                     <td>{{ x }}</td>
                     <td>{{ y }}</td>
@@ -50,7 +50,7 @@
               </tbody>
             </table>
             <h1 style="font-weight:bold"><br>Inaktive IDs</h1>
-            <div v-for="name in internalData['inactive']" v-bind:key="name">
+            <div v-for="(_, name) in inactive" v-bind:key="name">
               <p>{{ name }}</p>
             </div>
           </div>
@@ -65,6 +65,7 @@
 
 <script>
 
+import Vue from 'vue'
 import overview from './layouts/overview.vue'
 import singleview from './layouts/singleview.vue'
 
@@ -87,6 +88,9 @@ export default {
       connected: false,
       ilocPositions: {},
       poiPositions: {},
+      hololensPositions: {},
+      active: {},
+      inactive: {},
       menu: [
         {key:'overview', text:'Übersicht'},
         {key: '-1', text: 'KG', mapSource: "/brandhaus_kg.svg"},
@@ -117,39 +121,10 @@ export default {
       new_uri += this.socketPath;
       return new_uri
     },
-    internalData: function() {
-      var active = {};
-      var inactive = [];
-      Object.values(this.ilocPositions).forEach(item => {
-        Object.entries(item).forEach(([name, infos]) => {
-          const d = new Date();
-          var now = d.getTime();
-          var time = (( now - infos.ts)/1000).toFixed(1)
-          // inactive users
-          if(time > 5) {
-            // remove from active list
-            delete active[name];
-            // add to inactive list
-            if(!inactive.includes(name)) {
-              inactive.push(name);
-            }
-          }
-          // active
-          else {
-            active[name] = [infos.pos[0].toFixed(2),
-                            infos.pos[1].toFixed(2),
-                            infos.pos[2].toFixed(2),
-                            time];
-            // remove from inactive list
-            delete inactive[name];
-          }
-        })
-      })
-      return {active: active, inactive: inactive}
-    }
   },
   created() {
     this.openSocket()
+    window.setInterval(this.updateActive, 16)
   },
   destroyed() {
   },
@@ -173,12 +148,68 @@ export default {
       var recv_msg = JSON.parse(msg)
       if(recv_msg.topic == 'iloc') {
         delete recv_msg.topic
-        this.ilocPositions = recv_msg
+        for(var key in recv_msg){
+          if(!(key in this.ilocPositions)){
+            Vue.set(this.ilocPositions, key, {})
+          }
+          for(var name in recv_msg[key]){
+            const d = new Date();
+            recv_msg[key][name].ts = d.getTime();
+          }
+          Vue.set(this.ilocPositions, key, Object.assign({}, this.ilocPositions[key], recv_msg[key]))
+        }
       }
       if(recv_msg.topic == 'poi') {
         delete recv_msg.topic
-        this.poiPositions = recv_msg
+        for(var key in recv_msg){
+          if(!(key in this.poiPositions)){
+            Vue.set(this.poiPositions, key, {})
+          }
+          for(var name in recv_msg[key]){
+            const d = new Date();
+            recv_msg[key][name].ts = d.getTime();
+          }
+          Vue.set(this.poiPositions, key, Object.assign({}, this.poiPositions[key], recv_msg[key]))
+        }
       }
+      if(recv_msg.topic == 'hololens') {
+        delete recv_msg.topic
+        for(var key in recv_msg){
+          if(!(key in this.hololensPositions)){
+            Vue.set(this.hololensPositions, key, {})
+          }
+          for(var name in recv_msg[key]){
+            const d = new Date();
+            recv_msg[key][name].ts = d.getTime();
+          }
+          Vue.set(this.hololensPositions, key, Object.assign({}, this.hololensPositions[key], recv_msg[key]))
+        }
+      }
+    },
+    updateActive: function() {
+      Object.entries(this.ilocPositions).forEach(([key, item]) => {
+        Object.entries(item).forEach(([name, infos]) => {
+          const d = new Date();
+          var now = d.getTime();
+          var time = ((now - infos.ts)/1000).toFixed(1)
+          // inactive users
+          if(time > 5) {
+            // remove from active list
+            Vue.delete(this.active, name);
+            // add to inactive list
+            Vue.set(this.inactive, name, null);
+          }
+          // active
+          else {
+            Vue.set(this.active, name, [infos.pos[0].toFixed(2),
+                                        infos.pos[1].toFixed(2),
+                                        infos.pos[2].toFixed(2),
+                                        time]);
+            // remove from inactive list
+            Vue.delete(this.inactive, name);
+          }
+        })
+      })
     },
   }
 }
@@ -186,8 +217,9 @@ export default {
 
 <style>
 @import "~bulma/css/bulma.css";
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
 
-body {
+html, body {
   font-family: "Source Sans Pro";
 }
 </style>
@@ -294,7 +326,7 @@ nav > a.is-active {
   overflow: auto;
 }
 .informations .table-container {
-  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.25rem;
 }
 
 @media only screen and (max-width: 768px) {
@@ -308,15 +340,20 @@ nav > a.is-active {
 
 table {
   width: 100%;
-  table-layout: fixed;
-}
-td {
-  width: 20%;
-  text-align: right;
 }
 th {
   text-align: right;
 }
+.fix {
+  width: 1em
+}
+.long {
+  width: 4em
+}
+td {
+  text-align: right;
+}
+
 
 .status {
   position: fixed;

@@ -4,9 +4,9 @@ services:
   nginx:
     build: nginx
     network_mode: host
-  mqtt:
-    image: toke/mosquitto
-    network_mode: host
+  # mqtt:
+  #   image: toke/mosquitto
+  #   network_mode: host
   celidon_ui_dev:
     build:
       context: .
@@ -21,10 +21,10 @@ services:
     environment:
       - "PYTHONUNBUFFERED=1"
     network_mode: host
-  position_client:
-    build: position_client
-    depends_on:
-      - position_server
-    environment:
-      - "PYTHONUNBUFFERED=1"
-    network_mode: host
+  # position_client:
+  #   build: position_client
+  #   depends_on:
+  #     - position_server
+  #   environment:
+  #     - "PYTHONUNBUFFERED=1"
+  #   network_mode: host
